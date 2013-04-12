@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Web;
 
 namespace matthewcv.common.Infrastructure
@@ -24,6 +25,15 @@ namespace matthewcv.common.Infrastructure
                 session.Remove(key);
             }
             return val;
+        }
+
+        public static string PropertyName<TProp>(this object obj, Expression<Func<TProp>>  expression)
+        {
+            LambdaExpression le = (LambdaExpression) expression;
+            return
+                (!(le.Body is UnaryExpression)
+                     ? (MemberExpression) le.Body
+                     : (MemberExpression) ((UnaryExpression) le.Body).Operand).Member.Name;
         }
     }
 }

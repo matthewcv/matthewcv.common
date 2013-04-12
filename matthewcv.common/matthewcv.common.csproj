@@ -118,6 +118,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ConfigurationModule.cs" />
+    <Compile Include="Configuration\SiteConfiguration.cs" />
+    <Compile Include="Configuration\SiteRole.cs" />
+    <Compile Include="Entity\DocumentStoreListener.cs" />
     <Compile Include="Entity\EntityBase.cs" />
     <Compile Include="Infrastructure\Extensions.cs" />
     <Compile Include="Infrastructure\GravatarHtmlHelper.cs" />

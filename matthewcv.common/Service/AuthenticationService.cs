@@ -70,7 +70,6 @@ namespace matthewcv.common.Service
                 newid.ProfileId = CurrentProfile.Id;
                 newid.Provider = verifyAuthentication.Provider;
                 newid.ProviderUserId = verifyAuthentication.ProviderUserId;
-                newid.CreatedDate = DateTime.UtcNow;
                 _docSess.Store(newid);
             }
         }
@@ -90,12 +89,11 @@ namespace matthewcv.common.Service
                 newId.ProviderUserId = authResult.ProviderUserId;
                 newId.IsCurrent = true;
                 newId.LastLogin = DateTime.UtcNow;
-                newId.CreatedDate = DateTime.UtcNow;
 
                 Profile newP = new Profile();
                 newP.DisplayName = authResult.UserName;
                 newP.EmailAddress = authResult.UserName;
-                newP.LastActivity = newP.CreatedDate = DateTime.UtcNow;
+                newP.LastActivity = DateTime.UtcNow;
                 _docSess.Store(newP);
 
                 newId.ProfileId = newP.Id;

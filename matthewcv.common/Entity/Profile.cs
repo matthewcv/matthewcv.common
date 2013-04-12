@@ -6,6 +6,7 @@ namespace matthewcv.common.Entity
     public class Profile : EntityBase
     {
         private IList<OAuthIdentity> _oAuthIdentities;
+        private List<string> _roles;
 
         /// <summary>
         /// the profile's display name for the site
@@ -21,6 +22,15 @@ namespace matthewcv.common.Entity
 
         public DateTime LastActivity { get; set; }
 
+        public bool IsApproved { get; set; }
+
+        public bool IsLockedOut { get; set; }
+
+        public List<String> Roles
+        {
+            get { return _roles ?? (_roles = new List<string>()); }
+            set { _roles = value; }
+        }
 
         [Raven.Imports.Newtonsoft.Json.JsonIgnore]
         public bool IsGuest { get; set; }
