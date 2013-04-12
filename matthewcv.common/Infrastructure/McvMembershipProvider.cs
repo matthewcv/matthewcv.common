@@ -26,7 +26,7 @@ namespace matthewcv.common.Infrastructure
         {
             get
             {
-                return "mywebsite";
+                return "SiteTemplate";
             }
             set
             {
