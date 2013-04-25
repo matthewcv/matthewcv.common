@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Web;
 
@@ -6,6 +7,14 @@ namespace matthewcv.common.Infrastructure
 {
     public static class Extensions
     {
+        public static void Each<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            foreach (T t in source)
+            {
+                action(t);
+            }
+        }
+
         public static bool Bool(this HttpSessionStateBase session, string key)
         {
             object val = session[key];

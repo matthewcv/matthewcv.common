@@ -1,23 +1,24 @@
 ﻿using System.Collections.Generic;
-using DotNetOpenAuth.AspNet;
+using OAuth2.Client;
+using OAuth2.Models;
 using matthewcv.common.Entity;
 
 namespace matthewcv.common.Service
 {
     public interface IAuthenticationService
     {
-        IList<IAuthenticationClient> OAuthClients { get; }
+        IEnumerable<IClient> OAuthClients { get; }
 
-        IAuthenticationClient GetClient(string providerName);
+        IClient GetClient(string providerName);
 
-        OpenAuthSecurityManager GetSecurityManager(string providerName);
+        //OpenAuthSecurityManager GetSecurityManager(string providerName);
 
-        LoginResponse Login(AuthenticationResult authResult);
+        LoginResponse Login(UserInfo authResult);
 
         OAuthIdentity FindOAuthIdentity(string provider, string providerUserId);
 
         Profile CurrentProfile { get; }
         void UpdateCurrentProfile(Profile profile);
-        void AddAuthToCurrentProfile(AuthenticationResult verifyAuthentication);
+        void AddAuthToCurrentProfile(UserInfo verifyAuthentication);
     }
 }

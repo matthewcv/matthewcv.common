@@ -3,23 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Security;
-using DotNetOpenAuth.AspNet;
+using OAuth2.Client;
+using OAuth2.Configuration;
+using OAuth2.Models;
 using Raven.Client;
 using matthewcv.common.Entity;
+using matthewcv.common.Infrastructure;
 
 namespace matthewcv.common.Service
 {
-    public class AuthenticationService : IAuthenticationService, IOpenAuthDataProvider
+    public class AuthenticationService : IAuthenticationService
     {
         private readonly HttpContextBase _httpContext;
         private readonly IDocumentSession _docSess;
-        private List<IAuthenticationClient> _oAuthClients;
+        private readonly IEnumerable<IClient> _clients;
 
-        public AuthenticationService(HttpContextBase httpContext, IDocumentSession docSess)
+        private readonly OAuth2ConfigurationSection _configSection;
+
+        public AuthenticationService(HttpContextBase httpContext, IDocumentSession docSess, IEnumerable<IClient> clients )
         {
             _httpContext = httpContext;
             _docSess = docSess;
-            _oAuthClients = new List<IAuthenticationClient>();
+            _configSection = (OAuth2ConfigurationSection)System.Configuration.ConfigurationManager.GetSection("oauth2") ;
+            IEnumerable<string> enabled = _configSection.Services.AsEnumerable().Where(c => c.IsEnabled).Select(c => c.ProviderName);
+            _clients = clients.Where(c => enabled.Contains(c.ProviderName));
+
 
             if (!CurrentProfile.IsGuest)
             {
@@ -27,36 +35,27 @@ namespace matthewcv.common.Service
             }
         }
 
-        public IList<IAuthenticationClient> OAuthClients
+        public IEnumerable<IClient> OAuthClients
         {
-            get { return _oAuthClients; }
+            get { return _clients; }
         }
 
-        public AuthenticationService AddClient(IAuthenticationClient client)
-        {
-            _oAuthClients.Add(client);
-            return this;
-        }
-        
-        public IAuthenticationClient GetClient(string providerName)
+
+        public IClient GetClient(string providerName)
         {
             return OAuthClients.FirstOrDefault(c => c.ProviderName == providerName);
         }
 
-        public OpenAuthSecurityManager GetSecurityManager(string providerName)
-        {
-            return new OpenAuthSecurityManager(_httpContext,GetClient(providerName),this);
-        }
 
-        public void AddAuthToCurrentProfile(AuthenticationResult verifyAuthentication)
+        public void AddAuthToCurrentProfile(UserInfo userinfo)
         {
-            if (CurrentProfile == null || !verifyAuthentication.IsSuccessful)
+            if (CurrentProfile == null || userinfo == null)
             {
                 throw new Exception("Can't do that now");
             }
 
             //get or create the oauth identity.
-            OAuthIdentity findOAuthIdentity = FindOAuthIdentity(verifyAuthentication.Provider, verifyAuthentication.ProviderUserId);
+            OAuthIdentity findOAuthIdentity = FindOAuthIdentity(userinfo.ProviderName, userinfo.Id);
             if (findOAuthIdentity != null)
             {
                 //somebody already exists. add this identity to the current profile and delete the old profile.
@@ -68,31 +67,31 @@ namespace matthewcv.common.Service
             {
                 OAuthIdentity newid = new OAuthIdentity();
                 newid.ProfileId = CurrentProfile.Id;
-                newid.Provider = verifyAuthentication.Provider;
-                newid.ProviderUserId = verifyAuthentication.ProviderUserId;
+                newid.Provider = userinfo.ProviderName;
+                newid.ProviderUserId = userinfo.Id;
                 _docSess.Store(newid);
             }
         }
 
-        public LoginResponse Login(AuthenticationResult authResult)
+        public LoginResponse Login(UserInfo userinfo)
         {
-            if (authResult.IsSuccessful == false)
+            if (userinfo == null)
             {
                 throw new ApplicationException("Auth result not successful");
             }
             LoginResponse lr = new LoginResponse();
-            OAuthIdentity oai = FindOAuthIdentity(authResult.Provider, authResult.ProviderUserId);
+            OAuthIdentity oai = FindOAuthIdentity(userinfo.ProviderName, userinfo.Id);
             if (oai == null)
             {
                 OAuthIdentity newId = new OAuthIdentity();
-                newId.Provider = authResult.Provider;
-                newId.ProviderUserId = authResult.ProviderUserId;
+                newId.Provider =userinfo.ProviderName;
+                newId.ProviderUserId = userinfo.Id;
                 newId.IsCurrent = true;
                 newId.LastLogin = DateTime.UtcNow;
 
                 Profile newP = new Profile();
-                newP.DisplayName = authResult.UserName;
-                newP.EmailAddress = authResult.UserName;
+                newP.DisplayName = userinfo.FirstName + " " + userinfo.LastName;
+                newP.EmailAddress = userinfo.Email;
                 newP.LastActivity = DateTime.UtcNow;
                 _docSess.Store(newP);
 

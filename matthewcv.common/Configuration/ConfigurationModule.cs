@@ -21,7 +21,7 @@ namespace matthewcv.common.Configuration
         private string _ravenConnectionStringName;
         public ConfigurationModule()
         {
-            WithSiteRole("Admin");  //every site needs an Admin role, so just put it in ther automatically.
+            WithSiteRole("Admin");  //every site needs an Admin role, so just put it in there automatically.
             WithUsersMustBeApproved(true); //do this by default.  
         }
         public override void Load()
@@ -31,6 +31,8 @@ namespace matthewcv.common.Configuration
             Bind<IDocumentStore>()
                 .ToMethod(InitDocStore)
                 .InSingletonScope();
+
+            
 
             Bind<IDocumentSession>()
                 .ToMethod(c => c.Kernel.Get<IDocumentStore>().OpenSession())
